@@ -47,6 +47,8 @@ namespace Assets.Scripts.Networking
 
                     Task.Run(() => ReceiveData(id, client));
 
+                    onMessage.Invoke($"New client connected with id: {id}");
+
                     SendMessage(id, "You are connected to the server!");
                 }
             }

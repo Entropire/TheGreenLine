@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Assets.Scripts.Networking
 {
@@ -17,14 +18,14 @@ namespace Assets.Scripts.Networking
             try
             {
                 client = new TcpClient();
-                client.Connect("127.0.0.1", 8080);
+                client.Connect("192.168.178.195", 8080);
                 onMessage.Invoke("Connected to server");
 
-                System.Threading.Tasks.Task.Run(ReceiveData);
+                Thread thread = new Thread(ReceiveData);
+                thread.Start();
             }
             catch (Exception e)
             {
-                client.Close();
                 onMessage.Invoke($"You have been disconnected from the server: {e}");
                 throw;
             }
@@ -38,26 +39,39 @@ namespace Assets.Scripts.Networking
 
             NetworkStream stream = client.GetStream();
 
-            while (true)
+            try
             {
-                try
+
+                while (true)
                 {
-                    if (!client.Connected)
-                        continue;
+                    try
+                    {
+                        if (!client.Connected)
+                            continue;
 
-                    bytesRead = await stream.ReadAsync(bytes, 0, bytes.Length);
+                        bytesRead = await stream.ReadAsync(bytes, 0, bytes.Length);
 
-                    if (bytesRead <= 0)
-                        continue;
+                        if (bytesRead <= 0)
+                            continue;
 
-                    data = Encoding.UTF8.GetString(bytes, 0, bytesRead);
-                    onMessage.Invoke($"Server: {data}");
+                        data = Encoding.UTF8.GetString(bytes, 0, bytesRead);
+                        onMessage.Invoke($"Server: {data}");
+                    }
+                    catch (IOException ex)
+                    {
+                        onMessage.Invoke($"Disconnected from server");
+                        break;
+                    }
                 }
-                catch (IOException ex)
-                {
-                    onMessage.Invoke($"Disconnected from server");
-                    break;
-                }
+            }
+            catch (Exception e)
+            {
+                onMessage.Invoke(e.Message);
+            }
+            finally
+            {
+                client.Close();
+                onMessage.Invoke($"Disconnected from server");
             }
         }
 
