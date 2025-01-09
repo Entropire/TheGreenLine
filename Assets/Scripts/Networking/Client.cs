@@ -18,7 +18,7 @@ namespace Assets.Scripts.Networking
             try
             {
                 client = new TcpClient();
-                client.Connect("192.168.178.195", 8080);
+                client.Connect("192.168.178.16", 8080);
                 onMessage.Invoke("Connected to server");
 
                 Thread thread = new Thread(ReceiveData);
@@ -33,14 +33,13 @@ namespace Assets.Scripts.Networking
 
         private async void ReceiveData()
         {
-            byte[] bytes = new byte[1024];
-            string data;
-            int bytesRead;
-
-            NetworkStream stream = client.GetStream();
-
             try
             {
+                byte[] bytes = new byte[1024];
+                string data;
+                int bytesRead;
+
+                NetworkStream stream = client.GetStream();
 
                 while (true)
                 {
