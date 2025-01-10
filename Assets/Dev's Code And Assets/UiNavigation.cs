@@ -10,6 +10,7 @@ public class UiNavigation : MonoBehaviour
     // This code will control buttons that modify UIs. This means that this will switch between UIs and Panels.
     // Mostly public values for interchangeability.
 
+    [SerializeField] private GameObject activeMenu; //The menu that is active currently
     public void ToggleUI(GameObject uiParent)
     {
 
@@ -20,5 +21,11 @@ public class UiNavigation : MonoBehaviour
         }
 
         uiParent.SetActive(!uiParent.activeInHierarchy); //Toggle the uiParent between its active and inactive state.
+    }
+    public void LoadMenu(GameObject menu)
+    {
+        activeMenu.SetActive(false);
+        menu.SetActive(true);
+        activeMenu = menu; 
     }
 }
