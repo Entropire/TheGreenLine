@@ -10,9 +10,8 @@ public class UiNavigation : MonoBehaviour
     // This code will control buttons that modify UIs. This means that this will switch between UIs and Panels.
     // Mostly public values for interchangeability.
 
-    public void ToggleUI()
+    public void ToggleUI(GameObject uiParent)
     {
-        GameObject uiParent = gameObject; // Defines the UIparent being the model the script is under.
 
         if (uiParent == null) // If uiParent is undefined or null
         {
