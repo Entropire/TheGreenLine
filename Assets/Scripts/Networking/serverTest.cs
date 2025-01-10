@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Networking
 {
@@ -11,11 +6,12 @@ namespace Assets.Scripts.Networking
     {
         public void StartServer()
         {
-            Server server = new Server();
+            Host host = new Host();
 
-            server.onMessage += (msg) => Debug.Log(msg);
-
-            server.Start();
+            host.onMessage += (msg) => Debug.Log(msg);
+            
+            Debug.Log("Starting server");
+            host.Start();
         }
 
         public void StartClient()
