@@ -348,8 +348,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 429783879}
-        m_TargetAssemblyTypeName: Assets.Scripts.Networking.serverTest, Assembly-CSharp
-        m_MethodName: StartServer
+        m_TargetAssemblyTypeName: Server.NetworkingUI, Assembly-CSharp
+        m_MethodName: Host
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1782,7 +1782,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 429783876}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: def9bf7e4385e194cb4e830226ab20bc, type: 3}
+  m_Script: {fileID: 11500000, guid: b95c8a26e4f954c4a978961ad4de5325, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &437803658
@@ -3885,8 +3885,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 429783879}
-        m_TargetAssemblyTypeName: Assets.Scripts.Networking.serverTest, Assembly-CSharp
-        m_MethodName: StartClient
+        m_TargetAssemblyTypeName: Server.NetworkingUI, Assembly-CSharp
+        m_MethodName: Client
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

@@ -1,129 +1,149 @@
 ﻿using System;
-using System.IO;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
-namespace Assets.Scripts.Networking
+namespace Server
 {
-    internal class Host
+  internal class Host : Client
+  {
+    public event Action onReady;
+    public event Action onConnected;
+    public event Action<string> onMessage;
+
+    private TcpListener listener;
+    private TcpClient client;
+    private NetworkStream stream;
+
+    public new void Start(IPAddress ip, ushort port, CancellationToken ct)
     {
-        public Action<String> onMessage;
-        
-        private TcpClient client;
-        private TcpListener listener;
-
-        public void Start() => new Thread(StartTcpHost).Start();
-
-        private async void StartTcpHost()
-        {
-            try
-            {
-                onMessage.Invoke("Starting server...");
-                listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 8080);
-                listener.Start();
-                onMessage.Invoke("Server online!");
-                await ListenForClient();
-                await ReceivePacket();
-            }
-            catch (Exception e)
-            {
-                onMessage(e.Message);
-            }
-            finally
-            {
-                listener.Stop();
-                onMessage.Invoke("Server stopped.");
-            }
-        }
-
-        private async Task ListenForClient()
-        {
-            onMessage.Invoke("Listening for clients");
-            try
-            {
-                while (client == null)
-                {
-                    TcpClient client = await listener.AcceptTcpClientAsync();
-                    this.client = client;
-                    
-                    SendPacket(PacketType.Message, "You are connected to the server!");
-                    onMessage.Invoke($"client connected");
-                }
-            }
-            catch (Exception e)
-            {
-                onMessage.Invoke(e.Message);
-                throw;
-            }
-            finally
-            {
-                listener.Stop();
-                onMessage.Invoke("Server stopped");
-            }
-        }
-
-        private async Task ReceivePacket()
-        {
-            byte[] bytes = new byte[1024];
-            string data;
-            int bytesRead;
-            
-            using (client)
-            {
-                if (client.Connected)
-                {
-                    NetworkStream stream = client.GetStream();
-            
-                    while (true)
-                    {
-                        try
-                        {
-                            bytesRead = await stream.ReadAsync(bytes, 0, bytes.Length);
-            
-                            if (bytesRead <= 0)
-                                continue;
-            
-                            data = Encoding.UTF8.GetString(bytes, 0, bytesRead);
-                            Packet packet = JsonUtility.FromJson<Packet>(data);
-                            
-                            onMessage.Invoke($"client: [{packet.type}] {packet.data}");
-                        }
-                        catch (IOException e)
-                        {
-                            onMessage.Invoke(e.Message);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        public void SendPacket(PacketType packetType, String packetData)
-        {
-            if (client.Connected)
-            {
-                try
-                {
-                    Packet packet = new Packet(packetType, packetData);
-                    Byte[] data = Encoding.UTF8.GetBytes(JsonUtility.ToJson(packet));
-                    
-                    NetworkStream stream = client.GetStream();
-                    stream.Write(data, 0, data.Length);
-                }
-                catch (Exception e)
-                {
-                    onMessage.Invoke($"failed to send message to the server: {e}");
-                    throw;
-                }
-            }
-            else
-            {
-                onMessage.Invoke($"Disconnected from server");
-            }
-        }
+      Thread thread = new Thread(() => StartAsync(ip, port, ct));
+      onMessage?.Invoke("host: Starting new thread for host!");
+      thread.Start();
     }
+
+    private async void StartAsync(IPAddress ip, ushort port, CancellationToken ct)
+    {
+
+      try
+      {
+        listener = new TcpListener(ip, port);
+        onMessage?.Invoke($"host: Listener started");
+        listener.Start();
+
+        onReady?.Invoke();
+        await ListenForClient(ct);
+
+        if (client != null)
+        {
+          onConnected?.Invoke();
+        }
+
+        await ListenForPackets(ct);
+      }
+      catch (SocketException ex)
+      {
+        Console.WriteLine($"Unable to connect: {ex.Message}");
+      }
+      catch (ArgumentException ex)
+      {
+        Console.WriteLine($"Invalid IP or port: {ex.Message}");
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex.Message);
+      }
+      finally
+      {
+        listener.Stop();
+
+      }
+    }
+
+    private async Task ListenForClient(CancellationToken ct)
+    {
+      onMessage?.Invoke("host: Listening for clients");
+      try
+      {
+        TcpClient client = await listener.AcceptTcpClientAsync();
+        this.client = client;
+        this.stream = client.GetStream();
+
+        SendPacket(PacketType.Message, "You are connected to the server!");
+      }
+      catch (OperationCanceledException)
+      {
+        Console.WriteLine("Client connection attempt canceled.");
+      }
+    }
+
+    private async Task ListenForPackets(CancellationToken ct)
+    {
+      onMessage?.Invoke("host: Listening for incoming packets");
+      while (true)
+      {
+        if (ct.IsCancellationRequested || !client.Connected)
+        {
+          break;
+        }
+
+        if (!stream.DataAvailable)
+        {
+          Task.Delay(100);
+          continue;
+        }
+
+        Packet packet = await ReadPacket();
+        Console.WriteLine($"[{packet.type}] Client: {packet.message}");
+      }
+    }
+
+    private async Task<Packet> ReadPacket()
+    {
+      byte[] lenghtBuffer = new byte[4];
+      stream.Read(lenghtBuffer, 0, 4);
+      int messageLenth = BitConverter.ToInt32(lenghtBuffer, 0);
+
+      byte[] messageBuffer = new byte[messageLenth];
+      int totalBytesRead = 0;
+
+      while (totalBytesRead < messageLenth)
+      {
+        int bytesRead = stream.Read(messageBuffer, totalBytesRead, messageLenth - totalBytesRead);
+
+        if (bytesRead == 0)
+        {
+          break;
+        }
+
+        totalBytesRead += bytesRead;
+      }
+      string jsonString = Encoding.UTF8.GetString(messageBuffer);
+      return JsonUtility.FromJson<Packet>(jsonString);
+    }
+
+    public void SendPacket(PacketType packetType, String packetData)
+    {
+      if (client == null || !client.Connected)
+      {
+        return;
+      }
+
+      Packet packet = new Packet(packetType, packetData);
+      byte[] messageBuffer = Encoding.UTF8.GetBytes(JsonUtility.ToJson(packet));
+
+      byte[] lenghtBuffer = BitConverter.GetBytes(messageBuffer.Length);
+
+      stream.Write(lenghtBuffer, 0, lenghtBuffer.Length);
+      stream.Write(messageBuffer, 0, messageBuffer.Length);
+    }
+  }
 }
+
+
+
+
+

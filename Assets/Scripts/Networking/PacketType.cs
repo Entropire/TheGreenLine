@@ -1,7 +1,8 @@
-﻿namespace Assets.Scripts.Networking
+﻿namespace Server
 {
-    public enum PacketType
-    {
-        Message
-    }
+  public enum PacketType
+  {
+    Message
+  }
 }
+
