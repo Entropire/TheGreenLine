@@ -13,6 +13,7 @@ namespace Server
     public event Action onReady;
     public event Action onConnected;
     public event Action<string> onMessage;
+    public event Action<string> onError;
 
     private TcpListener listener;
     private TcpClient client;
@@ -46,15 +47,15 @@ namespace Server
       }
       catch (SocketException ex)
       {
-        Console.WriteLine($"Unable to connect: {ex.Message}");
+        onError?.Invoke($"Unable to connect: {ex.Message}");
       }
       catch (ArgumentException ex)
       {
-        Console.WriteLine($"Invalid IP or port: {ex.Message}");
+        onError?.Invoke($"Invalid IP or port: {ex.Message}");
       }
       catch (Exception ex)
       {
-        Console.WriteLine(ex.Message);
+        onError?.Invoke(ex.Message);
       }
       finally
       {
@@ -76,7 +77,7 @@ namespace Server
       }
       catch (OperationCanceledException)
       {
-        Console.WriteLine("Client connection attempt canceled.");
+        onError?.Invoke("Client connection attempt canceled.");
       }
     }
 
@@ -97,7 +98,7 @@ namespace Server
         }
 
         Packet packet = await ReadPacket();
-        Console.WriteLine($"[{packet.type}] Client: {packet.message}");
+        onMessage?.Invoke($"[{packet.type}] Client: {packet.message}");
       }
     }
 
