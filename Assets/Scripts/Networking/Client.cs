@@ -28,8 +28,11 @@ namespace Server
     {
       try
       {
+        Debug.Log("Test1");
         client = new TcpClient();
+        Debug.Log("Test2");
         client.Connect(ip, port);
+        Debug.Log("Test3");
         stream = client.GetStream();
 
         onMessage?.Invoke($"client: Connecting to {ip}:{port}");
