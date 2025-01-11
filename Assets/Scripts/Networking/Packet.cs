@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Server
+namespace Assets.Scripts.Networking
 {
   public class Packet
   {

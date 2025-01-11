@@ -1,46 +1,38 @@
-﻿using System.IO;
-using System;
-using System.Net;
+﻿using System;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using UnityEngine;
 
-namespace Server
+namespace Assets.Scripts.Networking
 {
-  internal class Client
+  internal class Client : TcpConnection
   {
-    public event Action onConnected;
-    public event Action<string> onMessage;
-    public event Action<string> onError;
+    private LobbyData lobbyData;
 
-    private TcpClient client;
-    private NetworkStream stream;
-
-    public void Start(IPAddress ip, ushort port, CancellationToken ct)
+    public Client(LobbyData lobbyData)
     {
-      Thread thread = new Thread(() => StartAsync(ip, port, ct));
+      this.lobbyData = lobbyData;
+    }
+
+    public override void Start(CancellationToken ct)
+    {
+      Thread thread = new Thread(() => StartAsync(ct));
       onMessage?.Invoke("client: Starting new thread for client!");
       thread.Start();
     }
 
-    private void StartAsync(IPAddress ip, ushort port, CancellationToken ct)
+    private async void StartAsync(CancellationToken ct)
     {
       try
       {
-        Debug.Log("Test1");
         client = new TcpClient();
-        Debug.Log("Test2");
-        client.Connect(ip, port);
-        Debug.Log("Test3");
+        client.Connect(lobbyData.ip, lobbyData.port);
         stream = client.GetStream();
 
-        onMessage?.Invoke($"client: Connecting to {ip}:{port}");
+        onMessage?.Invoke($"client: Connecting to {lobbyData.ip}:{lobbyData.port}");
         onConnected?.Invoke();
 
-        SendPacket(PacketType.Message, "You are connected to the client!");
-        ListenForPackets(client, ct);
+        SendPacket(PacketType.ChatMessage, "You are connected to the client!");
+        await ListenForPackets(ct);
       }
       catch (SocketException ex)
       {
@@ -58,69 +50,6 @@ namespace Server
       {
         client?.Dispose();
       }
-    }
-
-    private async void ListenForPackets(TcpClient client, CancellationToken ct)
-    {
-      onMessage?.Invoke("client: Listening for incoming packets");
-      while (true)
-      {
-        if (ct.IsCancellationRequested || !client.Connected)
-        {
-          break;
-        }
-
-        if (!stream.DataAvailable)
-        {
-          Task.Delay(100);
-          continue;
-        }
-
-        Packet packet = await ReadPacket(stream);
-        onMessage?.Invoke($"[{packet.type}] Host: {packet.message}");
-      }
-    }
-
-    private async Task<Packet> ReadPacket(Stream stream)
-    {
-      byte[] lenghtBuffer = new byte[4];
-      stream.Read(lenghtBuffer, 0, 4);
-      int messageLenth = BitConverter.ToInt32(lenghtBuffer, 0);
-
-      byte[] messageBuffer = new byte[messageLenth];
-      int totalBytesRead = 0;
-
-      while (totalBytesRead < messageLenth)
-      {
-        int bytesRead = stream.Read(messageBuffer, totalBytesRead, messageLenth - totalBytesRead);
-
-        if (bytesRead == 0)
-        {
-          break;
-        }
-
-        totalBytesRead += bytesRead;
-      }
-
-      string jsonString = Encoding.UTF8.GetString(messageBuffer);
-
-      return JsonUtility.FromJson<Packet>(jsonString);
-    }
-
-    public void SendPacket(PacketType packetType, String packetData)
-    {
-      if (client == null || !client.Connected)
-      {
-        return;
-      }
-
-      Packet packet = new Packet(packetType, packetData);
-      byte[] messageBuffer = Encoding.UTF8.GetBytes(JsonUtility.ToJson(packet));
-
-      byte[] lenghtBuffer = BitConverter.GetBytes(messageBuffer.Length);
-
-      stream.Write(lenghtBuffer, 0, lenghtBuffer.Length);
-      stream.Write(messageBuffer, 0, messageBuffer.Length);
     }
   }
 }
