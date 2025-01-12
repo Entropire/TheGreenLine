@@ -13,6 +13,6 @@ public class UiInteraction : MonoBehaviour
 
     public void ExitProgram()
     {
-        Debug.Log("program exited");
+        Application.Quit();
     }
 }

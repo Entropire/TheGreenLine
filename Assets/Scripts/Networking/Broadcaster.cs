@@ -11,7 +11,7 @@ namespace Assets.Scripts.Networking
 {
   internal class Broadcaster
   {
-    public Action<List<LobbyData>> onLobiesUpdate;
+    public Action<LobbyData> onLobiesUpdate;
 
     private List<LobbyData> lobbies = new List<LobbyData>();
     private CancellationTokenSource cancellationTokenSource;
@@ -32,6 +32,7 @@ namespace Assets.Scripts.Networking
     public async Task SendBroadCast(LobbyData lobbyData)
     {
       using (UdpClient udpClient = new UdpClient())
+      using (cancellationToken.Register(() => udpClient.Dispose()))
       {
         while (true)
         {
@@ -53,37 +54,68 @@ namespace Assets.Scripts.Networking
       }
     }
 
-    public async Task ListenForBroadCast()
+    public void ListenForBroadCast()
+    {
+      Task.Run(ListenForBroadCastAsync);
+    }
+
+    public async Task ListenForBroadCastAsync()
     {
       using (UdpClient udpClient = new UdpClient(port))
+      using (cancellationToken.Register(() => udpClient.Dispose()))
       {
         IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, port);
 
         while (true)
         {
+          Debug.Log("Listening for broadcasts");
+
           if (cancellationToken.IsCancellationRequested)
           {
+            Debug.Log("Stopped Listening for broadcasts");
             break;
           }
 
-          byte[] data = udpClient.Receive(ref remoteEndPoint);
-          string message = Encoding.UTF8.GetString(data);
-          LobbyData lobbyData = JsonUtility.FromJson<LobbyData>(message);
-
-          if (!lobbies.Contains(lobbyData))
+          try
           {
-            lobbies.Add(lobbyData);
-            onLobiesUpdate?.Invoke(lobbies);
-          }
+            byte[] data = udpClient.Receive(ref remoteEndPoint);
+            string message = Encoding.UTF8.GetString(data);
+            LobbyData lobbyData = JsonUtility.FromJson<LobbyData>(message);
 
+            if (!lobbies.Contains(lobbyData))
+            {
+              lobbies.Add(lobbyData);
+              onLobiesUpdate?.Invoke(lobbyData);
+            }
+          }
+          catch (SocketException ex)
+          {
+            if (cancellationToken.IsCancellationRequested)
+            {
+              Debug.Log("Receive interrupted due to cancellation.");
+              break;
+            }
+            Debug.LogError($"SocketException: {ex.Message}");
+          }
           await Task.Delay(100);
         }
       }
-    }
 
+      Debug.Log("Stopped Listening for broadcasts");
+    }
     public void CancelOperations()
     {
       cancellationTokenSource.Cancel();
+    }
+
+    public void RefreshLobbies()
+    {
+      lobbies = new List<LobbyData>();
+    }
+
+    public List<LobbyData> GetLobbies()
+    {
+      return lobbies;
     }
   }
 }
