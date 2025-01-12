@@ -2,27 +2,10 @@
 
 namespace Assets.Scripts.Networking
 {
-  internal class LobbyData
+  internal record LobbyData(string name, IPAddress ip)
   {
-    public string name { private set; get; }
-    public IPAddress ip { private set; get; }
+    public string name { private set; get; } = name;
+    public IPAddress ip { private set; get; } = ip;
     public ushort port { private set; get; } = 8000;
-
-    public LobbyData(string name, IPAddress ip)
-    {
-      this.name = name;
-      this.ip = ip;
-    }
-
-    public override bool Equals(object obj)
-    {
-      if (obj is LobbyData other)
-      {
-        return this.name == other.name &&
-               this.ip == other.ip &&
-               this.port == other.port;
-      }
-      return false;
-    }
   }
 }

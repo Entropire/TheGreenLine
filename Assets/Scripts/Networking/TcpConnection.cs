@@ -18,15 +18,27 @@ namespace Assets.Scripts.Networking
     protected NetworkStream stream;
 
     private PacketHandler packetHandler = new PacketHandler();
+    private CancellationTokenSource tokenSource = new CancellationTokenSource();
+    protected CancellationToken cancellationToken;
 
-    public abstract void Start(CancellationToken ct = default);
+    public TcpConnection()
+    {
+      cancellationToken = tokenSource.Token;
+    }
 
-    protected async Task ListenForPackets(CancellationToken ct)
+    public abstract void Start();
+
+    public void Stop()
+    {
+      tokenSource.Cancel();
+    }
+
+    protected async Task ListenForPackets()
     {
       onMessage?.Invoke("client: Listening for incoming packets");
       while (true)
       {
-        if (ct.IsCancellationRequested || !client.Connected)
+        if (!client.Connected)
         {
           break;
         }
@@ -37,12 +49,12 @@ namespace Assets.Scripts.Networking
           continue;
         }
 
-        Packet packet = await ReadPacket(stream);
+        Packet packet = ReadPacket(stream);
         packetHandler.HandlePacket(packet);
       }
     }
 
-    protected async Task<Packet> ReadPacket(Stream stream)
+    protected Packet ReadPacket(Stream stream)
     {
       byte[] lenghtBuffer = new byte[4];
       stream.Read(lenghtBuffer, 0, 4);

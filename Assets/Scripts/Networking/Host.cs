@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Threading;
+using Unity.VisualScripting;
 
 namespace Assets.Scripts.Networking
 {
@@ -15,31 +16,38 @@ namespace Assets.Scripts.Networking
       this.lobbyData = lobbyData;
     }
 
-    public override void Start(CancellationToken cancellationToken = default)
+    public override void Start()
     {
-      Thread thread = new Thread(() => StartAsync(cancellationToken));
+      Thread thread = new Thread(() => StartAsync());
       onMessage?.Invoke("host: Starting new thread for host!");
       thread.Start();
     }
 
-    private async void StartAsync(CancellationToken cancellationToken)
+    private async void StartAsync()
     {
-
       try
       {
-        listener = new TcpListener(lobbyData.ip, lobbyData.port);
-        onMessage?.Invoke($"host: Listener started");
-        listener.Start();
-
-        Broadcaster broadcaster = new Broadcaster();
-        Task.WaitAll(ListenForClient(cancellationToken, broadcaster), broadcaster.SendBroadCast(lobbyData));
-
-        if (client != null)
+        using (cancellationToken.Register(() => listener?.Stop()))
         {
-          onConnected?.Invoke();
-        }
+          listener = new TcpListener(lobbyData.ip, lobbyData.port);
+          listener.Start();
+          onMessage?.Invoke($"host: Host started");
 
-        await ListenForPackets(cancellationToken);
+          Broadcaster broadcaster = new Broadcaster();
+          Task.WaitAll(ListenForClient(broadcaster), broadcaster.SendBroadCast(lobbyData));
+
+          if (cancellationToken.IsCancellationRequested)
+          {
+            return; 
+          }
+
+          if (client != null)
+          {
+            onConnected?.Invoke();
+          }
+
+          await ListenForPackets();
+        }
       }
       catch (SocketException ex)
       {
@@ -55,19 +63,23 @@ namespace Assets.Scripts.Networking
       }
       finally
       {
-        client.Dispose();
-        listener.Stop();
+        onMessage?.Invoke("Host: Host stopped");
+        client?.Dispose();
+        listener?.Stop();
       }
     }
 
-    private async Task ListenForClient(CancellationToken ct, Broadcaster broadcaster)
+    private async Task ListenForClient(Broadcaster broadcaster)
     {
       onMessage?.Invoke("host: Listening for clients");
+
       try
       {
         TcpClient client = await listener.AcceptTcpClientAsync();
         this.client = client;
         this.stream = client.GetStream();
+
+        onMessage?.Invoke("host: Client connected.");
 
         SendPacket(PacketType.ChatMessage, "You are connected to the server!");
       }
@@ -75,9 +87,15 @@ namespace Assets.Scripts.Networking
       {
         onError?.Invoke("Client connection attempt canceled.");
       }
-
-      listener.Stop();
-      broadcaster.CancelOperations();
+      catch (Exception ex)
+      {
+        onError?.Invoke($"Error while listening for client: {ex.Message}");
+      }
+      finally
+      {
+        onMessage?.Invoke("Stopped listening for clients");
+        broadcaster.CancelOperations();
+      }
     }
   }
 }

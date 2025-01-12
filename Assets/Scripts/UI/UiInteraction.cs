@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class UiInteraction : MonoBehaviour
 {
-    [SerializeField] private GameObject activePanel;
+    [SerializeField] private static GameObject activePanel;
 
-    public void ActivatePanel(GameObject panel)
+    public static void ActivatePanel(GameObject panel)
     {
         activePanel?.SetActive(false);
         panel.SetActive(true);

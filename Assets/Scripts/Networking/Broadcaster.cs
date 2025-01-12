@@ -47,6 +47,8 @@ namespace Assets.Scripts.Networking
 
           IPEndPoint endPoint = new IPEndPoint(IPAddress.Broadcast, port);
           udpClient.Send(data, data.Length, endPoint);
+
+          await Task.Delay(1000);
         }
       }
     }

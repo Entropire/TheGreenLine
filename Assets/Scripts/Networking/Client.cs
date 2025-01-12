@@ -13,26 +13,34 @@ namespace Assets.Scripts.Networking
       this.lobbyData = lobbyData;
     }
 
-    public override void Start(CancellationToken ct)
+    public override void Start()
     {
-      Thread thread = new Thread(() => StartAsync(ct));
+      Thread thread = new Thread(StartAsync);
       onMessage?.Invoke("client: Starting new thread for client!");
       thread.Start();
     }
 
-    private async void StartAsync(CancellationToken ct)
+    private async void StartAsync()
     {
       try
       {
-        client = new TcpClient();
-        client.Connect(lobbyData.ip, lobbyData.port);
-        stream = client.GetStream();
+        using (cancellationToken.Register(() => client?.Dispose()))
+        {
+          client = new TcpClient();
+          client.Connect(lobbyData.ip, lobbyData.port);
+          stream = client.GetStream();
 
-        onMessage?.Invoke($"client: Connecting to {lobbyData.ip}:{lobbyData.port}");
-        onConnected?.Invoke();
+          if (cancellationToken.IsCancellationRequested)
+          {
+            return;
+          }
 
-        SendPacket(PacketType.ChatMessage, "You are connected to the client!");
-        await ListenForPackets(ct);
+          onMessage?.Invoke($"client: Connecting to {lobbyData.ip}:{lobbyData.port}");
+          onConnected?.Invoke();
+
+          SendPacket(PacketType.ChatMessage, "You are connected to the client!");
+          await ListenForPackets();
+        }
       }
       catch (SocketException ex)
       {
