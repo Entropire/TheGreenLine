@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class HostListUI : MonoBehaviour
 {
-  [SerializeField] private GameObject Contents;
+  [SerializeField] private Transform Contents;
   [SerializeField] private GameObject HostPrefab;
   private Broadcaster broadcaster;
 
@@ -25,6 +25,9 @@ public class HostListUI : MonoBehaviour
         client.onConnected += () => UiInteraction.ActivatePanel(GameObject.FindGameObjectsWithTag("Game")[0]);
         client.Start();
       });
+
+      tmpButton.transform.SetParent(Contents);
+      Instantiate(tmpButton);
     };
   }
 

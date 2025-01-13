@@ -36,6 +36,8 @@ namespace Assets.Scripts.Networking
       {
         while (true)
         {
+          Debug.Log("broadcast send");
+
           if (cancellationToken.IsCancellationRequested)
           {
             break;
@@ -67,15 +69,13 @@ namespace Assets.Scripts.Networking
         IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, port);
 
         while (true)
-        {
-          Debug.Log("Listening for broadcasts");
-
+        { 
           if (cancellationToken.IsCancellationRequested)
           {
             Debug.Log("Stopped Listening for broadcasts");
             break;
           }
-
+          Debug.Log("Listening for broadcasts");
           try
           {
             byte[] data = udpClient.Receive(ref remoteEndPoint);
@@ -84,6 +84,7 @@ namespace Assets.Scripts.Networking
 
             if (!lobbies.Contains(lobbyData))
             {
+              Debug.Log("Found a broad cast");
               lobbies.Add(lobbyData);
               onLobiesUpdate?.Invoke(lobbyData);
             }

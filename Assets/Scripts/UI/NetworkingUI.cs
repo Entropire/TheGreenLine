@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Net;
 
 using Assets.Scripts.Networking;
 using TMPro;
 using UnityEngine;
-using System.Threading;
 
 namespace Assets.Scripts.UI
 {
@@ -19,7 +16,7 @@ namespace Assets.Scripts.UI
     {
       LobbyData lobbyData = new LobbyData(lobbyName.text, GetLocalIPAddress());
       Host host = new Host(lobbyData);
-      host.onMessage += (msg) => Debug.Log(msg);
+      //host.onMessage += (msg) => Debug.Log(msg);
       host.onConnected += () =>
       {
         UiInteraction.ActivatePanel(GameObject.FindGameObjectsWithTag("Game")[0]);
