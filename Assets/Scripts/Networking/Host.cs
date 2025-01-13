@@ -32,8 +32,7 @@ namespace Assets.Scripts.Networking
           listener.Start();
           onMessage?.Invoke($"host: Host started");
 
-          Broadcaster broadcaster = new Broadcaster();
-          Task.WaitAll(ListenForClient(broadcaster), broadcaster.SendBroadCast(lobbyData));
+          await ListenForClient();
 
           if (cancellationToken.IsCancellationRequested)
           {
@@ -68,7 +67,7 @@ namespace Assets.Scripts.Networking
       }
     }
 
-    private async Task ListenForClient(Broadcaster broadcaster)
+    private async Task ListenForClient()
     {
       onMessage?.Invoke("host: Listening for clients");
 
@@ -93,7 +92,6 @@ namespace Assets.Scripts.Networking
       finally
       {
         onMessage?.Invoke("Stopped listening for clients");
-        broadcaster.CancelOperations();
       }
     }
   }

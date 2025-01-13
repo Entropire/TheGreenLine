@@ -1,9 +1,25 @@
-﻿namespace Assets.Scripts.Networking
+﻿using TMPro;
+using UnityEngine;
+
+namespace Assets.Scripts.Networking
 {
-  internal class PacketHandler
+  internal class PacketHandler : MonoBehaviour
   {
+    [SerializeField] private TMP_Text TMP_Text;
+    public static PacketHandler Instance;
+
+    private void Start()
+    {
+      if (Instance == null)
+      {
+        Instance = this;
+      }
+    }
+
     public void HandlePacket(Packet packet)
     {
+      Debug.Log(packet.type + ":" + packet.message);
+
       switch (packet.type)
       {
         case PacketType.Connected:
@@ -20,7 +36,7 @@
 
     private void HandleConnectedPacket(string data)
     {
-
+      TMP_Text.text = "connected";
     }
 
     private void HandleDisconnectedPacket(string data)
@@ -30,7 +46,7 @@
 
     private void HandleChatMessagePacket(string data)
     {
-
+      TMP_Text.text = data;
     }
   }
 }

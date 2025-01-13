@@ -50,7 +50,7 @@ namespace Assets.Scripts.Networking
         }
 
         Packet packet = ReadPacket(stream);
-        packetHandler.HandlePacket(packet);
+        PacketHandler.Instance.HandlePacket(packet);
       }
     }
 
