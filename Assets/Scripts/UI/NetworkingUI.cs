@@ -15,9 +15,9 @@ namespace Assets.Scripts.UI
     [SerializeField] GameObject gameUI;
     TcpConnection tcpConnection;
 
-    public void HostLobby(TMP_InputField lobbyName)
+    public void HostLobby(TMP_Dropdown dropdown)
     {
-      LobbyData lobbyData = new LobbyData(GetLocalIPAddress());
+      LobbyData lobbyData = new LobbyData(IPAddress.Parse(""));
       Debug.Log(lobbyData);
       Host host = new Host(lobbyData);
       host.onMessage += (msg) => Debug.Log(msg);
@@ -53,30 +53,6 @@ namespace Assets.Scripts.UI
       }, null);
       client.Start();
       tcpConnection = client;
-    }
-
-    private IPAddress GetLocalIPAddress()
-    {
-      return IPAddress.Parse("169.254.144.213");
-
-      try
-      {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        foreach (var ip in host.AddressList)
-        {
-          if (ip.AddressFamily == AddressFamily.InterNetwork) 
-          {
-            return ip;
-          }
-        }
-        throw new Exception("No IPv4 address found!");
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine("Error: " + ex.Message);
-      }
-
-      return default;
     }
   }
 }
