@@ -57,6 +57,8 @@ namespace Assets.Scripts.UI
 
     private IPAddress GetLocalIPAddress()
     {
+      return IPAddress.Parse("169.254.144.213");
+
       try
       {
         var host = Dns.GetHostEntry(Dns.GetHostName());
