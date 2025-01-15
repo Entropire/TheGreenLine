@@ -16,7 +16,6 @@ namespace Assets.Scripts.Networking
     public override void Start()
     {
       Thread thread = new Thread(StartAsync);
-      onMessage?.Invoke("client: Starting new thread for client!");
       thread.Start();
     }
 
@@ -30,25 +29,19 @@ namespace Assets.Scripts.Networking
           client.Connect(lobbyData.ip, lobbyData.port);
           stream = client.GetStream();
 
+          if (client.Connected)
+          {
+            onConnected?.Invoke();
+          }
+
           if (cancellationToken.IsCancellationRequested)
           {
             return;
           }
 
-          onMessage?.Invoke($"client: Connecting to {lobbyData.ip}:{lobbyData.port}");
-          onConnected?.Invoke();
-
-          //SendPacket(PacketType.ChatMessage, "You are connected to the client!");
+          SendPacket(PacketType.ChatMessage, "You are connected to the client!");
           await ListenForPackets();
         }
-      }
-      catch (SocketException ex)
-      {
-        onError?.Invoke($"Unable to connect: {ex.Message}");
-      }
-      catch (ArgumentException ex)
-      {
-        onError?.Invoke($"Invalid IP or port: {ex.Message}");
       }
       catch (Exception ex)
       {

@@ -3,35 +3,45 @@ using UnityEngine;
 
 namespace Assets.Scripts.Networking
 {
-  internal class PacketHandler : MonoBehaviour
+  internal static class PacketHandler
   {
+    private static TcpConnection tcpConnection;
+
+    public static event Action onConnected;
+    public static event Action onDisconnected;
     public static event Action<string> onChatMessage;
-    public static PacketHandler Instance;
 
-    private void Start()
-    {
-      if (Instance == null)
-      {
-        Instance = this;
-      }
-    }
-
-    public void HandlePacket(Packet packet)
+    public static void HandlePacket(Packet packet)
     {
       Debug.Log(packet.type + ":" + packet.message);
 
       switch (packet.type)
       {
         case PacketType.Connected:
-          onChatMessage?.Invoke("Connected");
+          onConnected?.Invoke();
           break;
         case PacketType.Disconnected:
-          onChatMessage?.Invoke("Other player has disconnected!");
+          onDisconnected?.Invoke();
           break;
         case PacketType.ChatMessage:
           onChatMessage?.Invoke(packet.message);
           break;
       }
+    }
+
+    public static void SetTcpConnection(TcpConnection tcpConnection)
+    {
+      PacketHandler.tcpConnection = tcpConnection;
+    }
+
+    public static void StopTcpConnection()
+    {
+      tcpConnection.Stop();
+    }
+
+    public static void SendPacket(PacketType packetType, string message)
+    {
+      tcpConnection?.SendPacket(packetType, message);
     }
   }
 }

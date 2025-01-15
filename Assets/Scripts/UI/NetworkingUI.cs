@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Net;
+﻿using System.Net;
 
 using Assets.Scripts.Networking;
 using TMPro;
@@ -11,29 +9,16 @@ namespace Assets.Scripts.UI
 {
   internal class NetworkingUI : MonoBehaviour
   {
-    public static NetworkingUI instance;
-
     [SerializeField] private TMP_Text WaitingLobbyIpText;
     [SerializeField] private GameObject gameUI;
-    public TcpConnection tcpConnection;
-
-    private void Start()
-    {
-      if (instance == null)
-      {
-        instance = this;
-      }
-    }
 
     public void HostLobby(TMP_Dropdown dropdown)
     {
       int selectedIndex = dropdown.value;
       string selectedOptions = dropdown.options[selectedIndex].text;
       LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
-      Debug.Log(lobbyData);
+
       Host host = new Host(lobbyData);
-      host.onMessage += (msg) => Debug.Log(msg);
-      host.onError += (msg) => Debug.LogError(msg);
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       host.onConnected += () =>
@@ -43,14 +28,15 @@ namespace Assets.Scripts.UI
           UiInteraction.ActivatePanel(gameUI);
         }, null);
       };
+
       host.Start();
-      tcpConnection = host;
+      PacketHandler.SetTcpConnection(host);
       WaitingLobbyIpText.text = lobbyData.ip.ToString();
     }
 
     public void StopTcpConnection()
     {
-      tcpConnection.Stop();
+      PacketHandler.StopTcpConnection();
     } 
 
     public void JoinLobby(TMP_InputField lobbyIP)
@@ -63,8 +49,9 @@ namespace Assets.Scripts.UI
       {
         UiInteraction.ActivatePanel(gameUI);
       }, null);
+
       client.Start();
-      tcpConnection = client;
+      PacketHandler.SetTcpConnection(client);
     }
   }
 }

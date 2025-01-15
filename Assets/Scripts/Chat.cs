@@ -1,6 +1,7 @@
 using Assets.Scripts.Networking;
-using Assets.Scripts.UI;
+using System.Threading;
 using TMPro;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class Chat : MonoBehaviour
@@ -13,20 +14,21 @@ public class Chat : MonoBehaviour
   private void Start()
   {
     inputField.onSubmit.AddListener(OnInputSubmit);
-
     PacketHandler.onChatMessage += AddMessage;
   }
 
   private void OnInputSubmit(string message)
   {
     AddMessage(message);
-    //NetworkingUI.instance.tcpConnection.SendPacket(PacketType.ChatMessage, message);
+    PacketHandler.SendPacket(PacketType.ChatMessage, message);
+    inputField.text = string.Empty;
   }
 
   private void AddMessage(string message)
   {
+    Debug.Log(message);
     messageText.text = message;
     GameObject newMessage = Instantiate(messagePrefab);
-    newMessage.transform.parent = chatContents;
+    newMessage.transform.SetParent(chatContents);
   }
 }
