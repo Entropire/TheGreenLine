@@ -24,6 +24,7 @@ public class Chat : MonoBehaviour
 
   private void AddMessage(string message)
   {
+    Debug.Log("test");
     Debug.Log(message);
     messageText.text = message;
     GameObject newMessage = Instantiate(messagePrefab);
