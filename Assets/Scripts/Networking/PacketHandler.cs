@@ -17,8 +17,6 @@ namespace Assets.Scripts.Networking
     {
       mainThreadContext?.Post(_ =>
       {
-        Debug.Log(packet.type + ":" + packet.message);
-
         switch (packet.type)
         {
           case PacketType.Connected:
@@ -46,7 +44,6 @@ namespace Assets.Scripts.Networking
 
     public static void SendPacket(PacketType packetType, string message)
     {
-      Debug.Log("PacketHandler sending packets");
       tcpConnection?.SendPacket(packetType, message);
     }
   }

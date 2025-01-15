@@ -19,7 +19,6 @@ namespace Assets.Scripts.UI
       LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
 
       Host host = new Host(lobbyData);
-      host.onError += (msg) => Debug.Log(msg);
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       host.onConnected += () =>
@@ -45,13 +44,14 @@ namespace Assets.Scripts.UI
       LobbyData lobbyData = new LobbyData(IPAddress.Parse(lobbyIP.text));
       Client client = new Client(lobbyData);
 
-      client.onError += (msg) => Debug.Log(msg);
-
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
-      mainThreadContext?.Post(_ =>
+      client.onConnected += () =>
       {
-        UiInteraction.ActivatePanel(gameUI);
-      }, null);
+        mainThreadContext?.Post(_ =>
+        {
+          UiInteraction.ActivatePanel(gameUI);
+        }, null);
+      };
 
       client.Start();
       PacketHandler.SetTcpConnection(client);

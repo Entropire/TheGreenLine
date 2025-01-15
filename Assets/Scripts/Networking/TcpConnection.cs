@@ -60,15 +60,12 @@ namespace Assets.Scripts.Networking
 
         string jsonString = Encoding.UTF8.GetString(messageBuffer); 
         Packet packet = JsonUtility.FromJson<Packet>(jsonString);
-        Debug.Log($"TcpConnection: packet recieved [{packet.type}]:{packet.message}");
         PacketHandler.HandlePacket(packet);
       }
     }
 
     public async void SendPacket(PacketType packetType, string packetData)
     {
-      Debug.Log("TcpConnection sending packet");
-
       if (client == null || !client.Connected)
       {
         return;

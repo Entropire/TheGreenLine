@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -32,7 +31,7 @@ public class HostUI : MonoBehaviour
       var host = Dns.GetHostEntry(Dns.GetHostName());
       foreach (var ip in host.AddressList)
       {
-        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        if (ip.AddressFamily == AddressFamily.InterNetwork && !iPAddresses.Contains(ip))
         {
           iPAddresses.Add(ip);
         }
