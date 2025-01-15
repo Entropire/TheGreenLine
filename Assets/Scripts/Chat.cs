@@ -1,7 +1,5 @@
 using Assets.Scripts.Networking;
-using System.Threading;
 using TMPro;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class Chat : MonoBehaviour
