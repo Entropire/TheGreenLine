@@ -60,17 +60,15 @@ namespace Assets.Scripts.Networking
 
         string jsonString = Encoding.UTF8.GetString(messageBuffer); 
         Packet packet = JsonUtility.FromJson<Packet>(jsonString);
-        string messagebits = "";
-        for (int i = 0; i < messageBuffer.Length; i++)
-        {
-          messagebits += messageBuffer[i];
-        }
+        Debug.Log($"TcpConnection: packet recieved [{packet.type}]:{packet.message}");
         PacketHandler.HandlePacket(packet);
       }
     }
 
     public async void SendPacket(PacketType packetType, string packetData)
     {
+      Debug.Log("TcpConnection sending packet");
+
       if (client == null || !client.Connected)
       {
         return;
@@ -83,13 +81,6 @@ namespace Assets.Scripts.Networking
 
       await stream.WriteAsync(lenghtBuffer, 0, lenghtBuffer.Length);
       await stream.WriteAsync(messageBuffer, 0, messageBuffer.Length);
-
-
-      string messagebits = "";
-      for (int i = 0; i < messageBuffer.Length; i++)
-      {
-        messagebits += messageBuffer[i];
-      }
     }
   }
 }

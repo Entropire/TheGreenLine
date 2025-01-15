@@ -41,6 +41,7 @@ namespace Assets.Scripts.Networking
 
     public static void SendPacket(PacketType packetType, string message)
     {
+      Debug.Log("PacketHandler sending packets");
       tcpConnection?.SendPacket(packetType, message);
     }
   }
