@@ -11,13 +11,25 @@ namespace Assets.Scripts.UI
 {
   internal class NetworkingUI : MonoBehaviour
   {
-    [SerializeField] TMP_Text WaitingLobbyIpText;
-    [SerializeField] GameObject gameUI;
-    TcpConnection tcpConnection;
+    public static NetworkingUI instance;
 
-    public void HostLobby(TMP_InputField lobbyName)
+    [SerializeField] private TMP_Text WaitingLobbyIpText;
+    [SerializeField] private GameObject gameUI;
+    public TcpConnection tcpConnection;
+
+    private void Start()
     {
-      LobbyData lobbyData = new LobbyData(GetLocalIPAddress());
+      if (instance == null)
+      {
+        instance = this;
+      }
+    }
+
+    public void HostLobby(TMP_Dropdown dropdown)
+    {
+      int selectedIndex = dropdown.value;
+      string selectedOptions = dropdown.options[selectedIndex].text;
+      LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
       Debug.Log(lobbyData);
       Host host = new Host(lobbyData);
       host.onMessage += (msg) => Debug.Log(msg);
@@ -53,30 +65,6 @@ namespace Assets.Scripts.UI
       }, null);
       client.Start();
       tcpConnection = client;
-    }
-
-    private IPAddress GetLocalIPAddress()
-    {
-      return IPAddress.Parse("169.254.144.213");
-
-      try
-      {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        foreach (var ip in host.AddressList)
-        {
-          if (ip.AddressFamily == AddressFamily.InterNetwork) 
-          {
-            return ip;
-          }
-        }
-        throw new Exception("No IPv4 address found!");
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine("Error: " + ex.Message);
-      }
-
-      return default;
     }
   }
 }

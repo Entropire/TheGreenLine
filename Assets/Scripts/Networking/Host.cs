@@ -79,7 +79,7 @@ namespace Assets.Scripts.Networking
 
         onMessage?.Invoke("host: Client connected.");
 
-        SendPacket(PacketType.ChatMessage, "You are connected to the server!");
+        //SendPacket(PacketType.ChatMessage, "You are connected to the server!");
       }
       catch (OperationCanceledException)
       {

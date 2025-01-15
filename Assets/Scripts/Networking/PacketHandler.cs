@@ -1,11 +1,11 @@
-﻿using TMPro;
+﻿using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Networking
 {
   internal class PacketHandler : MonoBehaviour
   {
-    [SerializeField] private TMP_Text TMP_Text;
+    public static event Action<string> onChatMessage;
     public static PacketHandler Instance;
 
     private void Start()
@@ -23,30 +23,15 @@ namespace Assets.Scripts.Networking
       switch (packet.type)
       {
         case PacketType.Connected:
-          HandleConnectedPacket(packet.message);
+          onChatMessage?.Invoke("Connected");
           break;
         case PacketType.Disconnected:
-          HandleDisconnectedPacket(packet.message);
+          onChatMessage?.Invoke("Other player has disconnected!");
           break;
         case PacketType.ChatMessage:
-          HandleChatMessagePacket(packet.message);
+          onChatMessage?.Invoke(packet.message);
           break;
       }
-    }
-
-    private void HandleConnectedPacket(string data)
-    {
-      TMP_Text.text = "connected";
-    }
-
-    private void HandleDisconnectedPacket(string data)
-    {
-
-    }
-
-    private void HandleChatMessagePacket(string data)
-    {
-      TMP_Text.text = data;
     }
   }
 }

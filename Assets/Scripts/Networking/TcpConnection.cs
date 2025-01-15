@@ -50,6 +50,7 @@ namespace Assets.Scripts.Networking
         }
 
         Packet packet = ReadPacket(stream);
+        Debug.Log($"package recieved: {packet.type}:{packet.message}");
         PacketHandler.Instance.HandlePacket(packet);
       }
     }
@@ -80,7 +81,7 @@ namespace Assets.Scripts.Networking
       return JsonUtility.FromJson<Packet>(jsonString);
     }
 
-    public void SendPacket(PacketType packetType, String packetData)
+    public void SendPacket(PacketType packetType, string packetData)
     {
       if (client == null || !client.Connected)
       {
@@ -91,6 +92,8 @@ namespace Assets.Scripts.Networking
       byte[] messageBuffer = Encoding.UTF8.GetBytes(JsonUtility.ToJson(packet));
 
       byte[] lenghtBuffer = BitConverter.GetBytes(messageBuffer.Length);
+
+      Debug.Log($"sending a backet: {packet.type}:{packet.message}");
 
       stream.Write(lenghtBuffer, 0, lenghtBuffer.Length);
       stream.Write(messageBuffer, 0, messageBuffer.Length);

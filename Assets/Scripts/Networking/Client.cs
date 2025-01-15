@@ -38,7 +38,7 @@ namespace Assets.Scripts.Networking
           onMessage?.Invoke($"client: Connecting to {lobbyData.ip}:{lobbyData.port}");
           onConnected?.Invoke();
 
-          SendPacket(PacketType.ChatMessage, "You are connected to the client!");
+          //SendPacket(PacketType.ChatMessage, "You are connected to the client!");
           await ListenForPackets();
         }
       }
