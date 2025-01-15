@@ -1,52 +1,50 @@
-﻿using TMPro;
+﻿using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Assets.Scripts.Networking
 {
-  internal class PacketHandler : MonoBehaviour
+  internal static class PacketHandler
   {
-    [SerializeField] private TMP_Text TMP_Text;
-    public static PacketHandler Instance;
+    private static SynchronizationContext mainThreadContext = SynchronizationContext.Current;
+    private static TcpConnection tcpConnection;
 
-    private void Start()
+    public static event Action onConnected;
+    public static event Action onDisconnected;
+    public static event Action<string> onChatMessage;
+
+    public static void HandlePacket(Packet packet)
     {
-      if (Instance == null)
+      mainThreadContext?.Post(_ =>
       {
-        Instance = this;
-      }
+        switch (packet.type)
+        {
+          case PacketType.Connected:
+            onConnected?.Invoke();
+            break;
+          case PacketType.Disconnected:
+            onDisconnected?.Invoke();
+            break;
+          case PacketType.ChatMessage:
+            onChatMessage?.Invoke(packet.message);
+            break;
+        }
+      }, null);
     }
 
-    public void HandlePacket(Packet packet)
+    public static void SetTcpConnection(TcpConnection tcpConnection)
     {
-      Debug.Log(packet.type + ":" + packet.message);
-
-      switch (packet.type)
-      {
-        case PacketType.Connected:
-          HandleConnectedPacket(packet.message);
-          break;
-        case PacketType.Disconnected:
-          HandleDisconnectedPacket(packet.message);
-          break;
-        case PacketType.ChatMessage:
-          HandleChatMessagePacket(packet.message);
-          break;
-      }
+      PacketHandler.tcpConnection = tcpConnection;
     }
 
-    private void HandleConnectedPacket(string data)
+    public static void StopTcpConnection()
     {
-      TMP_Text.text = "connected";
+      tcpConnection.Stop();
     }
 
-    private void HandleDisconnectedPacket(string data)
+    public static void SendPacket(PacketType packetType, string message)
     {
-
-    }
-
-    private void HandleChatMessagePacket(string data)
-    {
-      TMP_Text.text = data;
+      tcpConnection?.SendPacket(packetType, message);
     }
   }
 }

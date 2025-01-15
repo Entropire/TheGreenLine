@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Net;
+﻿using System.Net;
 
 using Assets.Scripts.Networking;
 using TMPro;
@@ -11,17 +9,16 @@ namespace Assets.Scripts.UI
 {
   internal class NetworkingUI : MonoBehaviour
   {
-    [SerializeField] TMP_Text WaitingLobbyIpText;
-    [SerializeField] GameObject gameUI;
-    TcpConnection tcpConnection;
+    [SerializeField] private TMP_Text WaitingLobbyIpText;
+    [SerializeField] private GameObject gameUI;
 
     public void HostLobby(TMP_Dropdown dropdown)
     {
-      LobbyData lobbyData = new LobbyData(IPAddress.Parse(""));
-      Debug.Log(lobbyData);
+      int selectedIndex = dropdown.value;
+      string selectedOptions = dropdown.options[selectedIndex].text;
+      LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
+
       Host host = new Host(lobbyData);
-      host.onMessage += (msg) => Debug.Log(msg);
-      host.onError += (msg) => Debug.LogError(msg);
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       host.onConnected += () =>
@@ -31,14 +28,15 @@ namespace Assets.Scripts.UI
           UiInteraction.ActivatePanel(gameUI);
         }, null);
       };
+
       host.Start();
-      tcpConnection = host;
+      PacketHandler.SetTcpConnection(host);
       WaitingLobbyIpText.text = lobbyData.ip.ToString();
     }
 
     public void StopTcpConnection()
     {
-      tcpConnection.Stop();
+      PacketHandler.StopTcpConnection();
     } 
 
     public void JoinLobby(TMP_InputField lobbyIP)
@@ -47,12 +45,16 @@ namespace Assets.Scripts.UI
       Client client = new Client(lobbyData);
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
-      mainThreadContext?.Post(_ =>
+      client.onConnected += () =>
       {
-        UiInteraction.ActivatePanel(gameUI);
-      }, null);
+        mainThreadContext?.Post(_ =>
+        {
+          UiInteraction.ActivatePanel(gameUI);
+        }, null);
+      };
+
       client.Start();
-      tcpConnection = client;
+      PacketHandler.SetTcpConnection(client);
     }
   }
 }

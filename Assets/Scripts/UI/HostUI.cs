@@ -1,28 +1,27 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using TMPro;
 using UnityEngine;
-using Unity.VisualScripting;
 
 public class HostUI : MonoBehaviour
 {
   [SerializeField] TMP_Dropdown dropdown;
   private List<IPAddress> iPAddresses = new List<IPAddress>();
 
+
   private void OnEnable()
   {
-    GetLocalIPAddress();
     dropdown.ClearOptions();
+
+    GetLocalIPAddress();
+
     foreach (IPAddress ip in iPAddresses)
     {
-      TMP_Dropdown.OptionData dropdownOption = new TMP_Dropdown.OptionData(ip.ToString());
-      dropdown.options.Add(dropdownOption);
-    } 
-
-    dropdown.RefreshShownValue();
+      TMP_Dropdown.OptionData optionData = new TMP_Dropdown.OptionData(ip.ToString());
+      dropdown.options.Add(optionData);
+    }
   }
 
   private void GetLocalIPAddress()
@@ -32,7 +31,7 @@ public class HostUI : MonoBehaviour
       var host = Dns.GetHostEntry(Dns.GetHostName());
       foreach (var ip in host.AddressList)
       {
-        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        if (ip.AddressFamily == AddressFamily.InterNetwork && !iPAddresses.Contains(ip))
         {
           iPAddresses.Add(ip);
         }
