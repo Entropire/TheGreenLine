@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Net;
+﻿using System.Net;
 
 using Assets.Scripts.Networking;
 using TMPro;
@@ -13,56 +9,52 @@ namespace Assets.Scripts.UI
 {
   internal class NetworkingUI : MonoBehaviour
   {
-    TcpConnection tcpConnection;
+    [SerializeField] private TMP_Text WaitingLobbyIpText;
+    [SerializeField] private GameObject gameUI;
 
-    public void HostLobby(TMP_InputField lobbyName)
+    public void HostLobby(TMP_Dropdown dropdown)
     {
-      LobbyData lobbyData = new LobbyData(lobbyName.text, GetLocalIPAddress());
+      int selectedIndex = dropdown.value;
+      string selectedOptions = dropdown.options[selectedIndex].text;
+      LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
+
       Host host = new Host(lobbyData);
-      host.onMessage += (msg) => Debug.Log(msg);
+
+      SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       host.onConnected += () =>
       {
-        UiInteraction.ActivatePanel(GameObject.FindGameObjectsWithTag("Game")[0]);
-      };
-      host.Start();
-      tcpConnection = host;
-    }
-
-    public void StopHostingLobby()
-    {
-      tcpConnection.Stop();
-    }
-
-    public void GetOpenLobbies()
-    {
-
-    }
-
-    public void JoinLobby()
-    {
-
-    }
-
-    private IPAddress GetLocalIPAddress()
-    {
-      try
-      {
-        var host = Dns.GetHostEntry(Dns.GetHostName());
-        foreach (var ip in host.AddressList)
+        mainThreadContext?.Post(_ =>
         {
-          if (ip.AddressFamily == AddressFamily.InterNetwork) // IPv4
-          {
-            return ip;
-          }
-        }
-        throw new Exception("No IPv4 address found!");
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine("Error: " + ex.Message);
-      }
+          UiInteraction.ActivatePanel(gameUI);
+        }, null);
+      };
 
-      return default;
+      host.Start();
+      PacketHandler.SetTcpConnection(host);
+      WaitingLobbyIpText.text = lobbyData.ip.ToString();
+    }
+
+    public void StopTcpConnection()
+    {
+      PacketHandler.StopTcpConnection();
+    } 
+
+    public void JoinLobby(TMP_InputField lobbyIP)
+    {
+      LobbyData lobbyData = new LobbyData(IPAddress.Parse(lobbyIP.text));
+      Client client = new Client(lobbyData);
+
+      SynchronizationContext mainThreadContext = SynchronizationContext.Current;
+      client.onConnected += () =>
+      {
+        mainThreadContext?.Post(_ =>
+        {
+          UiInteraction.ActivatePanel(gameUI);
+        }, null);
+      };
+
+      client.Start();
+      PacketHandler.SetTcpConnection(client);
     }
   }
 }

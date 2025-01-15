@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -11,13 +10,11 @@ namespace Assets.Scripts.Networking
   internal abstract class TcpConnection
   {
     public Action onConnected;
-    public Action<string> onMessage;
     public Action<string> onError;
 
     protected TcpClient client;
     protected NetworkStream stream;
 
-    private PacketHandler packetHandler = new PacketHandler();
     private CancellationTokenSource tokenSource = new CancellationTokenSource();
     protected CancellationToken cancellationToken;
 
@@ -35,7 +32,6 @@ namespace Assets.Scripts.Networking
 
     protected async Task ListenForPackets()
     {
-      onMessage?.Invoke("client: Listening for incoming packets");
       while (true)
       {
         if (!client.Connected)
@@ -43,44 +39,32 @@ namespace Assets.Scripts.Networking
           break;
         }
 
-        if (!stream.DataAvailable)
+        byte[] lenghtBuffer = new byte[4];
+        await stream.ReadAsync(lenghtBuffer, 0, 4);
+        int messageLength = BitConverter.ToInt32(lenghtBuffer, 0);
+
+        byte[] messageBuffer = new byte[messageLength];
+        int totalBytesRead = 0;
+
+        while (totalBytesRead < messageLength)
         {
-          await Task.Delay(100);
-          continue;
+          int bytesRead = await stream.ReadAsync(messageBuffer, totalBytesRead, messageLength - totalBytesRead);
+
+          if (bytesRead == 0)
+          {
+            break;
+          }
+
+          totalBytesRead += bytesRead;
         }
 
-        Packet packet = ReadPacket(stream);
-        packetHandler.HandlePacket(packet);
+        string jsonString = Encoding.UTF8.GetString(messageBuffer); 
+        Packet packet = JsonUtility.FromJson<Packet>(jsonString);
+        PacketHandler.HandlePacket(packet);
       }
     }
 
-    protected Packet ReadPacket(Stream stream)
-    {
-      byte[] lenghtBuffer = new byte[4];
-      stream.Read(lenghtBuffer, 0, 4);
-      int messageLenth = BitConverter.ToInt32(lenghtBuffer, 0);
-
-      byte[] messageBuffer = new byte[messageLenth];
-      int totalBytesRead = 0;
-
-      while (totalBytesRead < messageLenth)
-      {
-        int bytesRead = stream.Read(messageBuffer, totalBytesRead, messageLenth - totalBytesRead);
-
-        if (bytesRead == 0)
-        {
-          break;
-        }
-
-        totalBytesRead += bytesRead;
-      }
-
-      string jsonString = Encoding.UTF8.GetString(messageBuffer);
-
-      return JsonUtility.FromJson<Packet>(jsonString);
-    }
-
-    public void SendPacket(PacketType packetType, String packetData)
+    public async void SendPacket(PacketType packetType, string packetData)
     {
       if (client == null || !client.Connected)
       {
@@ -92,8 +76,8 @@ namespace Assets.Scripts.Networking
 
       byte[] lenghtBuffer = BitConverter.GetBytes(messageBuffer.Length);
 
-      stream.Write(lenghtBuffer, 0, lenghtBuffer.Length);
-      stream.Write(messageBuffer, 0, messageBuffer.Length);
+      await stream.WriteAsync(lenghtBuffer, 0, lenghtBuffer.Length);
+      await stream.WriteAsync(messageBuffer, 0, messageBuffer.Length);
     }
   }
 }

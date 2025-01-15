@@ -1,36 +1,50 @@
-﻿namespace Assets.Scripts.Networking
+﻿using System;
+using System.Threading;
+using UnityEngine;
+
+namespace Assets.Scripts.Networking
 {
-  internal class PacketHandler
+  internal static class PacketHandler
   {
-    public void HandlePacket(Packet packet)
+    private static SynchronizationContext mainThreadContext = SynchronizationContext.Current;
+    private static TcpConnection tcpConnection;
+
+    public static event Action onConnected;
+    public static event Action onDisconnected;
+    public static event Action<string> onChatMessage;
+
+    public static void HandlePacket(Packet packet)
     {
-      switch (packet.type)
+      mainThreadContext?.Post(_ =>
       {
-        case PacketType.Connected:
-          HandleConnectedPacket(packet.message);
-          break;
-        case PacketType.Disconnected:
-          HandleDisconnectedPacket(packet.message);
-          break;
-        case PacketType.ChatMessage:
-          HandleChatMessagePacket(packet.message);
-          break;
-      }
+        switch (packet.type)
+        {
+          case PacketType.Connected:
+            onConnected?.Invoke();
+            break;
+          case PacketType.Disconnected:
+            onDisconnected?.Invoke();
+            break;
+          case PacketType.ChatMessage:
+            onChatMessage?.Invoke(packet.message);
+            break;
+        }
+      }, null);
     }
 
-    private void HandleConnectedPacket(string data)
+    public static void SetTcpConnection(TcpConnection tcpConnection)
     {
-
+      PacketHandler.tcpConnection = tcpConnection;
     }
 
-    private void HandleDisconnectedPacket(string data)
+    public static void StopTcpConnection()
     {
-
+      tcpConnection.Stop();
     }
 
-    private void HandleChatMessagePacket(string data)
+    public static void SendPacket(PacketType packetType, string message)
     {
-
+      tcpConnection?.SendPacket(packetType, message);
     }
   }
 }
