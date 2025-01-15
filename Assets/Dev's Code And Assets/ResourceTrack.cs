@@ -5,7 +5,7 @@ using UnityEngine;
 public class ResourceTrack : MonoBehaviour
 {
     [SerializeField]
-    public int Steel = 0;
+    public int Iron = 0;
     public int Trans_Eq = 0;
     public int Tier2Se = 0;
     public int Tier2Ne = 0;
