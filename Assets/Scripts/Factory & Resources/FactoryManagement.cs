@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class FactoryManagement : MonoBehaviour
 {
+    //Code written by Patryk. This is a factory system producing resources every second, includes upgrade functions.
+
     [SerializeField]
     public float EffBoost; //Efficiency Boost
     public int ProdBoost; //Production Boost
