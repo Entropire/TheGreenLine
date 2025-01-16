@@ -13,6 +13,7 @@ namespace Assets.Scripts.Networking
     public static event Action onDisconnected;
     public static event Action<string> onChatMessage;
 
+
     public static void HandlePacket(Packet packet)
     {
       mainThreadContext?.Post(_ =>
