@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class UiInteraction : MonoBehaviour
 {
+    //Code originally written by Patryk, tweaked & rewritten by Quinten.
+
     [SerializeField] private static GameObject activePanel;
 
     public static void ActivatePanel(GameObject panel)

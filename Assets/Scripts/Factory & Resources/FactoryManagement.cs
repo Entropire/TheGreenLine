@@ -60,4 +60,23 @@ public class FactoryManagement : MonoBehaviour
             ProdBoost++;
         }
     }
+    public void FactoryBuy(int CurrentFunds)
+    {
+        int upgradeprice = 500;
+        if (CurrentFunds >= upgradeprice)
+        {
+            upgradeprice = upgradeprice ^ 2;
+            FactoryAmnt++;
+        }
+    }
+
+    public void EffUpgrade(int CurrentFunds)
+    {
+        int upgradeprice = 500;
+        if (CurrentFunds >= upgradeprice)
+        {
+            upgradeprice = upgradeprice ^ 2;
+            EffBoost++;
+        }
+    }
 }
