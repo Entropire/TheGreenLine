@@ -4,6 +4,8 @@ public class UiInteraction : MonoBehaviour
 {
   [SerializeField] private static GameObject activePanel;
   [SerializeField] private static GameObject activeGamePanel;
+  [SerializeField] private GameObject chatBtn;
+  [SerializeField] private GameObject chat;
 
   public static void ActivatePanel(GameObject panel)
   {
@@ -19,6 +21,11 @@ public class UiInteraction : MonoBehaviour
     activeGamePanel = panel;
   }
 
+  public void SetChatActive(bool active)
+  {
+    chatBtn?.SetActive(!active);
+    chat.SetActive(active);
+  }
 
   public void ExitProgram()
   {
