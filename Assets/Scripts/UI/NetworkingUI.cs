@@ -10,7 +10,7 @@ namespace Assets.Scripts.UI
   internal class NetworkingUI : MonoBehaviour
   {
     [SerializeField] private TMP_Text WaitingLobbyIpText;
-    [SerializeField] private GameObject gameUI;
+    [SerializeField] private GameObject game;
 
     public void HostLobby(TMP_Dropdown dropdown)
     {
@@ -25,7 +25,8 @@ namespace Assets.Scripts.UI
       {
         mainThreadContext?.Post(_ =>
         {
-          UiInteraction.ActivatePanel(gameUI);
+          UiInteraction.ActivatePanel(game);
+
         }, null);
       };
 
@@ -49,7 +50,7 @@ namespace Assets.Scripts.UI
       {
         mainThreadContext?.Post(_ =>
         {
-          UiInteraction.ActivatePanel(gameUI);
+          UiInteraction.ActivatePanel(game);
         }, null);
       };
 
