@@ -19,6 +19,7 @@ namespace Assets.Scripts.UI
       LobbyData lobbyData = new LobbyData(IPAddress.Parse(selectedOptions));
 
       Host host = new Host(lobbyData);
+      PacketHandler.playerCity = "Amsterdam";
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       host.onConnected += () =>
@@ -44,6 +45,7 @@ namespace Assets.Scripts.UI
     {
       LobbyData lobbyData = new LobbyData(IPAddress.Parse(lobbyIP.text));
       Client client = new Client(lobbyData);
+      PacketHandler.playerCity = "Stockholm";
 
       SynchronizationContext mainThreadContext = SynchronizationContext.Current;
       client.onConnected += () =>

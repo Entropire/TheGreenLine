@@ -32,24 +32,22 @@ namespace Assets.Scripts.Networking
           listener.Start();
 
           await ListenForClient();
-          SendPacket(PacketType.ChatMessage, "You are connected to the client!");
-
-          if (client.Connected)
+          SendPacket(PacketType.ChatMessage, "You are connected to the host !");
+          if (client != null && client.Connected)
           {
+            onConnected?.Invoke();
             onConnected?.Invoke();
           }
 
-          if (cancellationToken.IsCancellationRequested)
+          using (client)
           {
-            return; 
-          }
+            if (cancellationToken.IsCancellationRequested)
+            {
+              return;
+            }
 
-          if (client != null)
-          {
-            onConnected?.Invoke();
+            await ListenForPackets();
           }
-
-          await ListenForPackets();
         }
       }
       catch (Exception ex)

@@ -17,8 +17,9 @@ public class Chat : MonoBehaviour
 
   private void OnInputSubmit(string message)
   {
-    AddMessage(message);
-    PacketHandler.SendPacket(PacketType.ChatMessage, message);
+    Packet packet = new Packet(PacketType.ChatMessage, $"[{PacketHandler.playerCity}]: {message}");
+    PacketHandler.HandlePacket(packet);
+    PacketHandler.SendPacket(PacketType.ChatMessage, $"[{PacketHandler.playerCity}]: {message}");
     inputField.text = string.Empty;
   }
 
